@@ -1,0 +1,22 @@
+// PWA: service worker + "Install app" button
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+(() => {
+  let deferred = null;
+  const btn = document.createElement('button');
+  btn.textContent = '📲 ऐप इंस्टॉल करें';
+  btn.className = 'hidden fixed bottom-3 right-3 z-50 px-3 py-2 text-xs font-bold rounded-full bg-cyan-500 text-slate-950 shadow-lg';
+  document.body.appendChild(btn);
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; btn.classList.remove('hidden'); });
+  btn.onclick = async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; btn.classList.add('hidden'); };
+  window.addEventListener('appinstalled', () => btn.classList.add('hidden'));
+  // iPhone/Safari has no install prompt: show a hint
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (ios && !standalone) {
+    btn.textContent = '📲 Share → Add to Home Screen';
+    btn.classList.remove('hidden');
+    btn.onclick = () => btn.classList.add('hidden');
+  }
+})();
